@@ -21,7 +21,7 @@ print:
     PUSH bx
 
 print_loop:
-    LODSB
+    LODSB ; load byte from memory into al reg and inc SI by 1 since DF is not specified
     OR al, al ; check if we reach null terminator
     JZ done_print
 
@@ -40,7 +40,4 @@ done_print:
 os_boot_msg: DB 'OS has booted!!!! Please enjoy OS :)', 0x0D, 0x0A, 0
 
 TIMES 510 - ($ - $$) DB 0 ; writes 0 for 510 lines minus what this program takes up
-; $ = current addr of program
-; $$ = starting address of program ie 0x7C00
-; $ - $$ = size of program so far in bytes
 DW 0AA55h ; signature for BIOS to search for
