@@ -11,8 +11,18 @@ When run the BIOS loads and executes this bootloader and then prints text into t
 
 On Ubuntu/Debian-based systems, you can install the required tools with:
 ```bash
-sudo apt install build-essential nasm make qemu-system-i386
+sudo apt install build-essential nasm make
 ```
+
+## Build
+
+This project uses `make` to create the *build* folder and build the files into that folder. Simply run:
+
+```bash
+make
+```
+
+
 
 ## Example of running BootLoader
 [![Screenshot](https://i.postimg.cc/kG0ZgHwJ/Captura-de-pantalla-2026-01-13-a-la(s)-9-08-18-p-m.png)](https://postimages.org/)
