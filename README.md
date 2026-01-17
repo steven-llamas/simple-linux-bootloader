@@ -6,12 +6,21 @@ When run the BIOS loads and executes this bootloader and then prints text into t
 ## Requirements
  
 - [`nasm`](https://www.nasm.us/) – assembler for 16-bit code  
-- `make` – build system to run the Makefile to automate compilation and .img file creation in build folder 
+- `make` – build system to run the Makefile to automate compilation and .img file creation in build folder
+- other packages may be needed, make sure to run `make install_tools` (for Ubuntu/Debian systems) before building 
 - Optional: `qemu-system-i386` – emulator to test the bootloader on  
 
-On Ubuntu/Debian-based systems, you can install the required tools with:
+On **Ubuntu/Debian-based** systems, you can install the required tools with:
 ```bash
-sudo apt install build-essential nasm make qemu-system-i386
+sudo apt install build-essential nasm make
+```
+
+## Build
+
+This project uses `make` to build the files. Simply run:
+
+```bash
+make
 ```
 
 ## Example of running BootLoader

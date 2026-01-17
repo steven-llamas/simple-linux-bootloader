@@ -20,7 +20,9 @@ $(BUILD_DIR)/main.img: bootloader kernel
 bootloader: $(BUILD_DIR)/bootloader.bin
 
 $(BUILD_DIR)/bootloader.bin: $(SRC_DIR)/bootloader/boot.asm | $(BUILD_DIR)
-	$(ASM) $(SRC_DIR)/bootloader/boot.asm -f bin -o $(BUILD_DIR)/bootloader.bin
+	$(ASM) $< -f bin -o $@
+# $< first dependency listed aka $(SRC_DIR)/kernel/main.asm
+# $@ target file of current rule aka $(BUILD_DIR)/kernel.bin
 
 # --------- kernel ----------------------------
 kernel: $(BUILD_DIR)/kernel.bin
@@ -36,9 +38,9 @@ $(BUILD_DIR):
 .PHONY: check_tools
 check_tools:
 	@command -v nasm >/dev/null 2>&1 || { \
-		echo "nasm missing. Run 'make install_tools' (Ubuntu/Debian).; exit 1; }
+		echo "nasm missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v dd >/dev/null 2>&1 || { \
-		echo "dd missing. Please install coreutils manually."; exit 1; }
+		echo "dd missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v mkfs.fat >/dev/null 2>&1 || { \
 		echo "mkfs.fat missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v mcopy >/dev/null 2>&1 || { \
@@ -55,4 +57,4 @@ install_tools:
 # ------ clean ----------------------------------
 .PHONY: clean
 clean:
-	@rm -rf $(BUILD_DIR)/*
+	rm -rf $(BUILD_DIR)/*
