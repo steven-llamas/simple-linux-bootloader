@@ -20,7 +20,9 @@ $(BUILD_DIR)/main.img: bootloader kernel
 bootloader: $(BUILD_DIR)/bootloader.bin
 
 $(BUILD_DIR)/bootloader.bin: $(SRC_DIR)/bootloader/boot.asm | $(BUILD_DIR)
-	$(ASM) $(SRC_DIR)/bootloader/boot.asm -f bin -o $(BUILD_DIR)/bootloader.bin
+	$(ASM) $< -f bin -o $@
+#$<   the first prerequisite $(SRC_DIR)/bootloader/boot.asm
+#$@   the target the file being built $(BUILD_DIR)/bootloader.bin
 
 # --------- kernel ----------------------------
 kernel: $(BUILD_DIR)/kernel.bin
@@ -48,11 +50,11 @@ check_tools:
 # for Ubuntu/Debian systems (apt-based)
 .PHONY: install_tools
 install_tools:
-	@echo "Installing required build tools..."
-	@sudo apt update
-	@sudo apt install -y nasm coreutils dosfstools mtools
-	@echo "All required tools installed!"
+	echo "Installing required build tools..."
+	sudo apt update
+	sudo apt install -y nasm coreutils dosfstools mtools
+	echo "All required tools installed!"
 # ------ clean ----------------------------------
 .PHONY: clean
 clean:
-	@rm -rf $(BUILD_DIR)/*
+	rm -rf $(BUILD_DIR)/*

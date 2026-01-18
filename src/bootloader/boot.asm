@@ -1,6 +1,5 @@
 ORG 0x7C00                                                  ; mem addr where bios loads boot sector (first 512 bytes)
 BITS 16                                                     ; specifies we're working with 16 bits instead of 32
-                                                            ; as BIOS will start in REAL MODE 
 
 JMP SHORT main                                              ; jump to address within -128 + 127 bytes relative to current
 NOP                                                         ; placeholder/padding
@@ -9,7 +8,7 @@ bdb_oem:                        DB      'MSWIN4.1'          ; BIOS parameter Blo
 bdb_bytes_per_sector:           DW      512                 ; Disk sector size
 bdb_sectors_per_cluster:        DB      1                   ; amount of contiguous sectors per cluster
 bdb_reserved_sectors:           DW      1                   ; number of sectors reserved for special use
-bdb_fat_count:                  DB      2                   ; # of File Allocation Tables in bolume
+bdb_fat_count:                  DB      2                   ; # of File Allocation Tables in volume
 bdb_dir_entries_count:          DW      0E0h                ; max # of directory entries for root directory
 bdb_total_sectors:              DW      2880                ; 16-bit total number sectors 
 bdb_media_descriptor_type:      DB      0F0h                ; legacy value to ID physical media type 0F0h = floppy disk
@@ -34,16 +33,74 @@ main:
 
     MOV sp, 0x7C00                                          ; pointer to location of bootloader
                 
-    MOV [ebr_drive_number], dl
-    MOV ax, 1                                               ; LBA index
-    MOV cl, 1
-    MOV bx, 0x7E00                                          ; mem address where disk sector is to be loaded
-    CALL disk_read
+    ; MOV [ebr_drive_number], dl
+    ; MOV ax, 1                                             ; LBA index
+    ; MOV cl, 1
+    ; MOV bx, 0x7E00                                        ; mem address where disk sector is to be loaded
+    ; CALL disk_read
 
     MOV si, os_boot_msg
     CALL print_msg
+                                                            ;  FAT 12 -> 4 segments
+                                                            ; reserved segment = bdb_reserved_sectors = 1
+                                                            ; FAT: bdb_sectors_per_fat(9) * bdb_fat_count(2) = 18 sectors 
+                                                            ; Root Directory: 
+                                                            ; Data
+    MOV ax, [bdb_sectors_per_fat]
+    MOV bl, [bdb_fat_count]                                 
+    XOR bh, bh
+    MUL bx ;  bdb_sectors_per_fat * bdb_fat_count
+
+    ADD ax, [bdb_reserved_sectors]                          ; LBA of root directory         
+    PUSH ax
+
+    MOV ax, [bdb_dir_entries_count]                         ; number of root entries
+    SHL ax, 5                                               ; bit shift -> ax *= 32
+    XOR dx, dx                                                        
+    DIV word [bdb_bytes_per_sector]                         ; (32 * num of entries) / bytes per sector
+    
+    TEST dx, dx                                             ; check if there was a remainder after division
+    JZ read_dir_from_disk                                   ; if no remainder then we dont incremenht
+    INC ax                                                  ; otherwise we do to round
+
+    HLT
+    JMP halt
+
+read_dir_from_disk:
+    MOV cl, al                                              ; size of root dir into cl
+    POP ax
+    MOV dl, [ebr_drive_number]
+    MOV bx, disk_buffer
+    CALL disk_read
+
+    XOR bx, bx
+    MOV di, disk_buffer
+
+search_kernel:
+    MOV si, file_kernel_bin                                 ; address of kernel bin file
+    MOV cx, 11                                              ; size in bytes of file name
+    PUSH di
+    REPE CMPSB                                              ; compare s
+    POP di
+    JE found_kernel
+
+    ADD di, 32                                              ; next directory entry
+    INC bx                                                  ; inc, used to keep track of directories checked
+    CMP bx, [bdb_dir_entries_count]                         ; check if we've looked through all directories
+    JL search_kernel                                        ; search again if we havnt reached the count
+
+    JMP kernel_not_found
+
+
+kernel_not_found:
+    MOV si, kernel_not_found_msg
+    CALL print_msg
     
     HLT
+    JMP halt
+
+found_kernel:
+    MOV ax, [di + 26]
 
 halt:
     JMP halt                                                ; used so if it doesnt halt it will call itself
@@ -146,8 +203,16 @@ done_print:                                                 ; pops items in stac
     POP si
     RET                                                     ; returns back to main
 
-os_boot_msg: DB 'OS has booted! Please enjoy OS :)', 0x0D, 0x0A, 0
-read_fail_msg: DB 'Failed to read disk after retying!', 0x0D, 0x0A, 0
+os_boot_msg:         DB 'Loading... ', 0x0D, 0x0A, 0
+read_fail_msg:       DB 'Failed to read disk after retying!', 0x0D, 0x0A, 0
+
+file_kernel_bin      DB 'KERNEL  BIN'                        ; kernel filename, 11 bytes for FAT12 file format
+kernel_not_found_msg DB 'KERNEL.BIN not found!!'
+kernel_cluster       DW 0                                   ; starting cluster of kernel
+kernel_load_segment  EQU 0x2000                             ; location where kernel will be loaded
+kernel_load_offset   EQU 0                                  ; offset if needed from where loaded
 
 TIMES 510 - ($ - $$) DB 0                                   ; writes 0 for 510 lines minus what this program takes up
 DW 0AA55h                                                   ; signature for BIOS to search for
+
+disk_buffer:

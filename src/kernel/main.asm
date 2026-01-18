@@ -37,7 +37,7 @@ done_print:
     POP si
     RET
 
-os_boot_msg: DB 'OS has booted!!!! Please enjoy OS :)', 0x0D, 0x0A, 0
+os_boot_msg: DB 'OS has booted!!!! Please enjoy :)', 0x0D, 0x0A, 0
 
 TIMES 510 - ($ - $$) DB 0                                   ; writes 0 for 510 lines minus what this program takes up
 DW 0AA55h                                                   ; signature for BIOS to search for
