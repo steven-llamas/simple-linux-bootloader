@@ -38,9 +38,9 @@ $(BUILD_DIR):
 .PHONY: check_tools
 check_tools:
 	@command -v nasm >/dev/null 2>&1 || { \
-		echo "nasm missing. Run 'make install_tools' (Ubuntu/Debian).; exit 1; }
+		echo "nasm missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v dd >/dev/null 2>&1 || { \
-		echo "dd missing. Please install coreutils manually."; exit 1; }
+		echo "dd missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v mkfs.fat >/dev/null 2>&1 || { \
 		echo "mkfs.fat missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v mcopy >/dev/null 2>&1 || { \
