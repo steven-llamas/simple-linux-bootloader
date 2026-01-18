@@ -20,9 +20,12 @@ sudo apt install build-essential nasm make
 This project uses `make` to create the *build* folder and build the files into that folder. Simply run:
 
 ```bash
+make install_tools
+```
+`install_tools` will install all the required packages for this project (on ubuntu/debian systems). Then run:
+```bash
 make
 ```
-
 
 
 ## Example of running BootLoader
