@@ -1,1 +1,4 @@
 /build/*
+*.clang-format
+*.err
+run.sh

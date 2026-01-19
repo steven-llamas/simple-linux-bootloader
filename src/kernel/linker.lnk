@@ -1,0 +1,14 @@
+# watcom linker script defines how bin files are produced
+FORMAT RAW BIN
+OPTION QUIET,
+    NODEFAULTLIBS,
+    START=entry,
+    VERBOSE,
+    OFFSET=0,
+    STACK=0x200
+# process of how object files are arranged when linked   
+ORDER
+    CLNAME CODE
+        SEGMENT _ENTRY
+        SEGMENT _TEXT
+    CLNAME DATA

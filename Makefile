@@ -2,6 +2,13 @@
 ASM=nasm
 SRC_DIR=src
 BUILD_DIR=build
+# watcom 16 bit C compiler location
+# default location at /usr/bin/watcom 
+WATCOM?= /usr/bin/watcom
+CC16:= $(WATCOM)/binl/wcc
+LD16:= $(WATCOM)/binl/wlink
+C_FLAGS16= -s -wx -ms -zl -zq
+ASM_FLAGS=-f obj
 
 # ---------------- Floppy Image ----------------
 floppy_img: check_tools $(BUILD_DIR)/main.img
@@ -21,18 +28,26 @@ bootloader: $(BUILD_DIR)/bootloader.bin
 
 $(BUILD_DIR)/bootloader.bin: $(SRC_DIR)/bootloader/boot.asm | $(BUILD_DIR)
 	$(ASM) $< -f bin -o $@
-#$<   the first prerequisite $(SRC_DIR)/bootloader/boot.asm
-#$@   the target the file being built $(BUILD_DIR)/bootloader.bin
+# $<   the first prerequisite $(SRC_DIR)/bootloader/boot.asm
+# $@   the target the file being built $(BUILD_DIR)/bootloader.bin
 
 # --------- kernel ----------------------------
 kernel: $(BUILD_DIR)/kernel.bin
 
 $(BUILD_DIR)/kernel.bin: $(SRC_DIR)/kernel/main.asm | $(BUILD_DIR)
-	$(ASM) $< -f bin -o $@
+	$(ASM) $(ASM_FLAGS) -o $(BUILD_DIR)/kernel/asm/main.obj $<
+	$(ASM) $(ASM_FLAGS) -o $(BUILD_DIR)/kernel/asm/print.obj $(SRC_DIR)/kernel/print.asm
+	$(CC16) $(C_FLAGS16) -fo=$(BUILD_DIR)/kernel/c/main.obj $(SRC_DIR)/kernel/main.c
+	$(CC16) $(C_FLAGS16) -fo=$(BUILD_DIR)/kernel/c/stdio.obj $(SRC_DIR)/kernel/stdio.c
+	$(LD16) NAME $@ FILE \{$(BUILD_DIR)/kernel/asm/main.obj $(BUILD_DIR)/kernel/asm/print.obj \
+		$(BUILD_DIR)/kernel/c/main.obj $(BUILD_DIR)/kernel/c/stdio.obj \} \
+		OPTION MAP=${BUILD_DIR}/kernel.map @${SRC_DIR}/kernel/linker.lnk
 
 # ---------- Create build dir if missing -------
+.PHONY: $(BUILD_DIR)
 $(BUILD_DIR):
-	mkdir -p $(BUILD_DIR)
+	mkdir -p $(BUILD_DIR)/kernel/asm 
+	mkdir -p $(BUILD_DIR)/kernel/c
 
 # ---------- check tools ----------
 .PHONY: check_tools
@@ -45,6 +60,12 @@ check_tools:
 		echo "mkfs.fat missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
 	@command -v mcopy >/dev/null 2>&1 || { \
 		echo "mcopy missing. Run 'make install_tools' (Ubuntu/Debian)."; exit 1; }
+	@test -x $(CC16) || { \
+		echo "Open Watcom 16-bit not found at $(CC16)"; \
+		echo "Run make WATCOM=/path after installing, to set path if needed"; exit 1; }
+	@test -x $(LD16) || { \
+		echo "Open Watcom 16-bit linker not found at $(LD16)"; \
+		echo "Run make WATCOM=/path after installing to set path if needed"; exit 1; }
 
 # ---------- install required tools ----------
 # for Ubuntu/Debian systems (apt-based)
