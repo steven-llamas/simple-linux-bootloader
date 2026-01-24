@@ -28,6 +28,10 @@ make install_tools
 ```bash
 make
 ```
+Additionally, to clean the build folder, run:
+```bash
+make clean
+```
 
 
 ## Example of running OS in a VM
