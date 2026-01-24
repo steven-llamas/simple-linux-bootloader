@@ -1,7 +1,7 @@
 # Simple Operating System
 
 This project is a **minimal 16-bit Operating System** written in `nasm` asm and `C`. 
-When built, `the main.img` contains a bootable disk image(`main.img`).
+When built, contains a bootable disk image(`main.img`).
 This project is intended for educational purposes
 
 ## Requirements
